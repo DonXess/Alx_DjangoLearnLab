@@ -1,27 +1,56 @@
 from django import forms
-from .models import Profile, Post, Comment
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.models import User
+from .models import Post, Comment
+from taggit.forms import TagWidget
 
-class ProfileForm(forms.ModelForm):
+# Extend Django's user creation form for the registration form to include additional fields
+class CustomUserCreationForm(UserCreationForm):
+    email = forms.EmailField()
+
     class Meta:
-        model = Profile
-        fields = ['email', 'bio', 'picture']
+        model = User
+        fields = ['username', 'email', 'password1', 'password2']
 
-class CreatePostForm(forms.ModelForm):
+
+# Develop a form for the Post model using Django’s ModelForm to handle the creation and updating of blog posts
+class PostForm(forms.ModelForm):
     class Meta:
         model = Post
-        fields = ['title', 'content']
-
-class UpdatePostForm(forms.ModelForm):
-    class Meta:
-        model = Post
-        fields = ['title', 'content']
+        fields = ['title', 'content', 'tags']
         widgets = {
-            'title':forms.TextInput(attrs={'class':'form-control'}),
-            'content': forms.Textarea(attrs={'class': 'form-control'})
-
+            'tags': TagWidget(),
         }
 
+# CommentForm using Django’s ModelForm to facilitate comment creation and updating.
 class CommentForm(forms.ModelForm):
     class Meta:
         model = Comment
-        fields = ['content',]
+        fields = ['content']
+
+class UpdateForm(forms.ModelForm):
+    email = forms.EmailField()
+
+    class Meta:
+        model = User
+        fields = ['username', 'email']
+
+from django import forms
+from django.contrib.auth.models import User
+from django.contrib.auth.forms import UserCreationForm
+
+# Form for user registration
+class UserRegisterForm(UserCreationForm):
+    email = forms.EmailField()
+
+    class Meta:
+        model = User
+        fields = ['username', 'email', 'password1', 'password2']
+
+# Form for updating user profile
+class UserUpdateForm(forms.ModelForm):
+    email = forms.EmailField()
+
+    class Meta:
+        model = User
+        fields = ['username', 'email']
