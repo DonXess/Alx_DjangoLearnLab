@@ -1,56 +1,77 @@
-from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from .models import Post, Comment
-from taggit.forms import TagWidget
+from django import forms
+from taggit.forms import TagField, TagWidget
+from django.forms import widgets
 
-# Extend Django's user creation form for the registration form to include additional fields
-class CustomUserCreationForm(UserCreationForm):
-    email = forms.EmailField()
+from .models import Profile, Post, Comment
+
+
+class CustomerUserCreationForm(UserCreationForm):
+    """
+       A form that extends the default UserCreationForm to include an email field.
+       Attributes:
+           email (EmailField): Mandatory email field to capture the user's email during registration.
+       """
+    email = forms.EmailField(required=True)
 
     class Meta:
         model = User
         fields = ['username', 'email', 'password1', 'password2']
 
+    def save(self, commit=True):
+        """
+            Extends the save method to handle the email field explicitly.
+            commit (bool): If True, saves the user to the database immediately. Defaults to True.
+            Returns:
+                User: The user instance with email set.
+            The email is extracted from the cleaned_data dictionary before saving the User instance.
+        """
+        user = super().save(commit=False)
+        user.email = self.cleaned_data['email']
+        if commit:
+            user.save()
+        return user
 
-# Develop a form for the Post model using Django’s ModelForm to handle the creation and updating of blog posts
-class PostForm(forms.ModelForm):
+
+class UserEditForm(forms.ModelForm):
+    """
+    A form for editing basic User model fields.
+
+    Allows editing of 'username' and 'email'.
+    """
+
+    class Meta:
+        model = User
+        fields = ['username', 'email']
+
+
+class ProfileEditForm(forms.ModelForm):
+    """
+    A form for editing the additional fields in the Profile model.
+
+    Allows editing of 'bio' and 'profile_picture'.
+    """
+
+    class Meta:
+        model = Profile
+        fields = ['bio', 'profile_picture']
+
+
+class PostCreateEditForm(forms.ModelForm):
+    """
+        using modelForm to create a Form to either create or Update a Post using the Post model
+        allowed field to edit are title and content as the author is automatically set to the logged in user
+        and published_date are auto now add which is auto created upon post creation
+    """
+    tags = TagField(widget=TagWidget())
+
     class Meta:
         model = Post
         fields = ['title', 'content', 'tags']
-        widgets = {
-            'tags': TagWidget(),
-        }
 
-# CommentForm using Django’s ModelForm to facilitate comment creation and updating.
+
 class CommentForm(forms.ModelForm):
     class Meta:
         model = Comment
         fields = ['content']
-
-class UpdateForm(forms.ModelForm):
-    email = forms.EmailField()
-
-    class Meta:
-        model = User
-        fields = ['username', 'email']
-
-from django import forms
-from django.contrib.auth.models import User
-from django.contrib.auth.forms import UserCreationForm
-
-# Form for user registration
-class UserRegisterForm(UserCreationForm):
-    email = forms.EmailField()
-
-    class Meta:
-        model = User
-        fields = ['username', 'email', 'password1', 'password2']
-
-# Form for updating user profile
-class UserUpdateForm(forms.ModelForm):
-    email = forms.EmailField()
-
-    class Meta:
-        model = User
-        fields = ['username', 'email']
